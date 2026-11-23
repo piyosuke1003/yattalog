@@ -1,5 +1,5 @@
-const cacheName = 'yattalog-ui-2';
-const assets = ['./','./index.html','./calendar-v1.js','./manifest.webmanifest','./icon-192.png','./icon-512.png'];
+const cacheName = 'yattalog-ui-3';
+const assets = ['./','./index.html','./calendar-v1.js','./quick-window.js','./manifest.webmanifest','./icon-192.png','./icon-512.png'];
 const paths = new Set(assets.map(path => new URL(path, self.registration.scope).pathname));
 self.addEventListener('install', e => e.waitUntil(caches.open(cacheName).then(cache => cache.addAll(assets)).then(()=>self.skipWaiting())));
 self.addEventListener('activate', e => e.waitUntil(caches.keys().then(names=>Promise.all(names.filter(name=>name.startsWith('yattalog-ui-') && name!==cacheName).map(name=>caches.delete(name)))).then(()=>self.clients.claim())));

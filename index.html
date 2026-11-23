@@ -34,9 +34,13 @@ button,input{font:inherit;color:inherit}button{cursor:pointer}
 #status{margin:12px 0 0;font-size:14px;text-align:center;overflow-wrap:anywhere}#status:empty{display:none}
 @media(max-height:620px){:root{--gap:20px}main{padding-top:16px}}
 @media(hover:hover){.dial button:hover,.modes label:hover span{background:#eee9e9}.save:hover{background:#653c50}}
-</style></head><body><main><form id="form"><fieldset id="fields"><label for="title">やったこと</label><input id="title" required maxlength="200" placeholder="部屋を掃除した" enterkeyhint="done"><div class="time"><input id="date" type="date" aria-label="記録する日"><div class="dial"><button class="step" type="button" id="minus" aria-label="5分前へ">−</button><div class="digits" id="clock" role="spinbutton" tabindex="0" aria-label="時刻、上下で5分ずつ変更"></div><button class="step" type="button" id="plus" aria-label="5分後へ">＋</button></div></div><div class="modes" role="radiogroup" aria-label="時計の意味"><label><input type="radio" name="mode" value="start"><span>始めた時間</span></label><label><input type="radio" name="mode" value="end" checked><span>終わった時間</span></label></div><div class="durationhead"><span class="label" id="dl">所要時間</span></div><div class="reelbox"><div class="reel" id="reel" role="spinbutton" tabindex="0" aria-labelledby="dl" aria-valuemin="1" aria-valuemax="1440"></div></div><p id="range"></p><button class="save" id="save">記録する</button></fieldset></form><p id="status" role="status"></p></main>
+
+.tools{max-width:432px;margin:0 auto;padding:0 24px 16px;text-align:center}.tools :is(button,a),.mini-actions button{font:inherit;font-size:13px;color:var(--muted);border:0;background:transparent;padding:8px;cursor:pointer;text-underline-offset:3px}
+.compact{--gap:12px}.compact main{padding:14px 20px 8px}.compact #title{height:40px}.compact #clock{font-size:44px}.compact .modes{margin:4px 0 10px}.compact .date-trigger,.compact .modes span{min-height:34px}.compact #range{margin:8px 0 4px}.compact .save{min-height:40px}.compact #status{margin-top:4px}
+</style></head><body><main><form id="form"><fieldset id="fields"><label for="title">やったこと</label><input id="title" required maxlength="200" placeholder="部屋を掃除した" enterkeyhint="done"><div class="time"><input id="date" type="date" aria-label="記録する日"><div class="dial"><button class="step" type="button" id="minus" aria-label="5分前へ">−</button><div class="digits" id="clock" role="spinbutton" tabindex="0" aria-label="時刻、上下で5分ずつ変更"></div><button class="step" type="button" id="plus" aria-label="5分後へ">＋</button></div></div><div class="modes" role="radiogroup" aria-label="時計の意味"><label><input type="radio" name="mode" value="start"><span>始めた時間</span></label><label><input type="radio" name="mode" value="end" checked><span>終わった時間</span></label></div><div class="durationhead"><span class="label" id="dl">所要時間</span></div><div class="reelbox"><div class="reel" id="reel" role="spinbutton" tabindex="0" aria-labelledby="dl" aria-valuemin="1" aria-valuemax="1440"></div></div><p id="range"></p><button class="save" id="save">記録する</button></fieldset></form><p id="status" role="status"></p></main><footer class="tools"><button type="button" id="quick-window" hidden>小窓で記録</button><a id="android-download" href="https://github.com/piyosuke1003/yattalog/releases/latest/download/Yattalog.apk" hidden>Android版を入手</a></footer>
 <script>
-const $=id=>document.getElementById(id), pad=n=>String(n).padStart(2,'0');
+const formRoot=document.querySelector('main');
+const $=id=>formRoot.querySelector('#'+id), pad=n=>String(n).padStart(2,'0');
 const localDay=d=>[d.getFullYear(),pad(d.getMonth()+1),pad(d.getDate())].join('-');
 const hm=d=>pad(d.getHours())+':'+pad(d.getMinutes());
 const duration=n=>n<60?n+'分':Math.floor(n/60)+'時間'+(n%60?n%60+'分':'');
@@ -44,7 +48,7 @@ function opened(){const d=new Date();d.setSeconds(0,0);return d}
 let moment=opened(), minutes=15, busy=false, dirty=false;
 const options=[1,2,3,4,...Array.from({length:288},(_,i)=>(i+1)*5)];
 const reel=$('reel');
-function interval(){const m=moment.getTime(),span=minutes*60000;return document.querySelector('[name=mode]:checked').value==='start'?[m,m+span]:[m-span,m]}
+function interval(){const m=moment.getTime(),span=minutes*60000;return formRoot.querySelector('[name=mode]:checked').value==='start'?[m,m+span]:[m-span,m]}
 function labelRange(a,b){const s=new Date(a),e=new Date(b);return (localDay(s)!==localDay(e)?(s.getMonth()+1)+'/'+s.getDate()+' ':'')+hm(s)+' 〜 '+(localDay(s)!==localDay(e)?(e.getMonth()+1)+'/'+e.getDate()+' ':'')+hm(e)}
 function render(){const t=hm(moment);$('date').value=localDay(moment);$('clock').textContent=t;$('clock').setAttribute('aria-valuenow',moment.getHours()*60+moment.getMinutes());$('clock').setAttribute('aria-valuetext',t);$('range').textContent=labelRange(...interval());reel.setAttribute('aria-valuenow',minutes);reel.setAttribute('aria-valuetext',duration(minutes));}
 function move(direction){if(busy)return;dirty=true;const rest=moment.getMinutes()%5;moment.setMinutes(moment.getMinutes()+(direction>0?(5-rest):-(rest||5)));render()}
@@ -64,7 +68,7 @@ reel.onscroll=readWheel;reel.onclick=e=>{if(!busy&&e.target.dataset.minutes){dir
 reel.onkeydown=e=>{const d={ArrowDown:1,ArrowUp:-1,PageDown:6,PageUp:-6}[e.key];if(d&&!busy){e.preventDefault();dirty=true;go(options[Math.max(0,Math.min(options.length-1,options.indexOf(minutes)+d))])}};
 
 $('form').oninput=()=>{dirty=true;$('status').textContent=''};
-function finish(ok,message){busy=false;$('fields').disabled=false;reel.inert=false;if(ok){$('title').value='';moment=opened();dirty=false;document.querySelector('[value=end]').checked=true;go(15)}$('status').textContent=message}
+function finish(ok,message){busy=false;$('fields').disabled=false;reel.inert=false;if(ok){$('title').value='';moment=opened();dirty=false;formRoot.querySelector('[value=end]').checked=true;go(15)}$('status').textContent=message}
 
 function fresh(){if(!dirty&&!busy&&!$('title').value){moment=opened();render()}}
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)fresh()});window.addEventListener('pageshow',e=>{if(e.persisted)fresh()});
@@ -103,7 +107,7 @@ go(15);
   const [prev,next]=picker.querySelectorAll('.date-top button');prev.onclick=()=>{month.setMonth(month.getMonth()-1);draw()};next.onclick=()=>{month.setMonth(month.getMonth()+1);draw()};
   days.onclick=e=>{if(e.target.dataset.date)select(e.target.dataset.date)};picker.querySelector('.date-today').onclick=()=>select(key(new Date()));
   picker.onkeydown=e=>{if(e.key==='Escape'&&!panel.hidden){e.preventDefault();close(true);return}const delta={ArrowLeft:-1,ArrowRight:1,ArrowUp:-7,ArrowDown:7}[e.key];if(!delta||!e.target.dataset.date)return;e.preventDefault();const d=dateAt(e.target.dataset.date);d.setDate(d.getDate()+delta);month=new Date(d.getFullYear(),d.getMonth(),1,12);draw();days.querySelector('[data-date="'+key(d)+'"]').focus()};
-  document.addEventListener('pointerdown',e=>{if(!panel.hidden&&!picker.contains(e.target))close(false)});sync();
+  formRoot.addEventListener('pointerdown',e=>{if(!panel.hidden&&!picker.contains(e.target))close(false)});sync();
 })();
 </script>
-</body></html>
+<script src="./quick-window.js"></script></body></html>
