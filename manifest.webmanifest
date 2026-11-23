@@ -1,0 +1,25 @@
+{
+  "id": "./",
+  "name": "やったことを記録",
+  "short_name": "やったこと",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "lang": "ja",
+  "background_color": "#faf8f6",
+  "theme_color": "#faf8f6",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
