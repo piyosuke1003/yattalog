@@ -1,0 +1,33 @@
+name: Publish Android APK
+on:
+  push:
+    branches: [main]
+    paths: ['android/releases/**/Yattalog.apk']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Publish signed APK
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          version=$(python3 -c 'import xml.etree.ElementTree as ET; print(ET.parse("android/AndroidManifest.xml").getroot().attrib["{http://schemas.android.com/apk/res/android}versionName"])')
+          tag="v$version"
+          file="android/releases/$tag/Yattalog.apk"
+          test -s "$file"
+          if gh release view "$tag" >/dev/null 2>&1; then
+            if gh release view "$tag" --json assets --jq '.assets[].name' | grep -qx Yattalog.apk; then
+              mkdir -p "$RUNNER_TEMP/verify"
+              gh release download "$tag" -p Yattalog.apk -D "$RUNNER_TEMP/verify"
+              cmp "$file" "$RUNNER_TEMP/verify/Yattalog.apk"
+            else
+              gh release upload "$tag" "$file"
+            fi
+          else
+            gh release create "$tag" "$file" --target "$GITHUB_SHA" --title "やったこと $version" --notes 'Android版をインストールして「丸いボタンを表示」を押すと、別のアプリを開いたまま記録できます。'
+          fi
