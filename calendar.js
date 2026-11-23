@@ -1,11 +1,10 @@
 const calendarScope = 'https://www.googleapis.com/auth/calendar.events.owned';
 const listScope = 'https://www.googleapis.com/auth/calendar.calendarlist.readonly';
-const clientId = '';
+const clientId = '144891514509-nedhl452sind246jfu43i19pfsq2d559.apps.googleusercontent.com';
 let token = '', validUntil = 0;
 let selectedCalendar = '';
 
 function authorize() {
-  if (!clientId) throw new Error('Google カレンダーとの初期接続を設定中です。入力内容はこの画面に保持されています。');
   if (token && Date.now() < validUntil) return Promise.resolve();
   if (!window.google?.accounts?.oauth2) throw new Error('Google に接続できません。通信状況を確認してからもう一度押してください。');
   return new Promise((resolve, reject) => {
@@ -83,3 +82,4 @@ async function writeRecord(title,start,end) {
 }
 
 if ('serviceWorker' in navigator) window.addEventListener('load',() => navigator.serviceWorker.register('./sw.js').catch(()=>{}));
+
