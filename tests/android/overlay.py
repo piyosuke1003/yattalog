@@ -1,5 +1,6 @@
 """Exercise the three Android surfaces on a fresh CI emulator."""
 import re
+import shlex
 import subprocess
 import time
 from pathlib import Path
@@ -56,3 +57,24 @@ adb("shell", "input", "swipe", x, y, x, y, 900)
 locate("draft")
 locate("待機タイルへ")
 print("Normal → tile → panel → tile → normal, draft retained")
+
+# Only the disposable emulator owns this fixture; no real account is connected.
+account = "yattalog-test@example.invalid"
+provider = "content://com.android.calendar/"
+def content(operation, uri, *args):
+    return adb("shell", shlex.join(["content", operation, "--uri", uri, *args]))
+
+adb("root")
+adb("wait-for-device")
+sync = f"?caller_is_syncadapter=true&account_name={account}&account_type=com.google"
+content("insert", provider + "calendars" + sync,
+    "--bind", f"account_name:s:{account}", "--bind", "account_type:s:com.google",
+    "--bind", "name:s:yattalog-test", "--bind", "calendar_displayName:s:やったこと リスト",
+    "--bind", f"ownerAccount:s:{account}", "--bind", "calendar_access_level:i:700",
+    "--bind", "sync_events:i:1", "--bind", "visible:i:1", "--bind", "calendar_color:i:42")
+tap("記録する")
+locate("記録しました")
+rows = content("query", provider + "events", "--projection", "title:dtstart:dtend",
+               "--where", "title='draft'")
+assert rows.count("title=draft") == 1 and "dtstart=" in rows, rows
+print("CalendarProvider contains one saved entry")

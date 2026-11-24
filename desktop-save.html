@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="referrer" content="no-referrer"><title>やったこと</title>
+<style>
+:root{font:16px/1.6 system-ui,sans-serif;color:#302d30;background:#faf8f6;color-scheme:light}
+body{min-height:90vh;display:grid;place-items:center;margin:0;padding:0 24px}main{width:min(100%,23rem)}
+h1{font-size:1.45rem;overflow-wrap:anywhere;margin:0}p{color:#655e62;margin:.4rem 0 1.5rem}
+button{font:inherit;border:0;border-radius:12px;background:#74465b;color:white;padding:.6rem 1.2rem;cursor:pointer}
+button:disabled{opacity:.6}#cancel{background:transparent;color:#655e62}#message{font-size:.9rem}
+</style>
+</head>
+<body><main><h1 id="title">やったこと</h1><p id="range"></p>
+<button id="save" type="button" disabled>カレンダーに記録</button><button id="cancel" type="button" hidden>取り消す</button>
+<p id="message" role="status"></p></main>
+<script src="./desktop-save.js"></script>
+</body></html>

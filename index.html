@@ -69,12 +69,13 @@ main form,main #status{width:min(100%,352px);margin-inline:auto}
 .compact .round{width:44px;height:44px}
 @media (max-height:460px){.compact main{padding-top:6px}.compact .tools{padding-block:3px}.compact .time{margin-top:6px}}
 
-#title:focus-visible{outline:none;border-bottom:2px solid var(--accent)}
+#title:focus,#title:focus-visible{outline:none;box-shadow:none;border-bottom:1px solid var(--line);-webkit-tap-highlight-color:transparent}
 .waiting body{display:grid;place-items:center;min-height:100dvh;margin:0}
 .tile{position:relative;width:100%;height:100dvh;display:grid;place-items:center}
 .tile-primary{width:100%;height:100%;padding:0;border:none;background:var(--wash)}
 .tile-primary img{width:44px;height:44px;border-radius:12px}
 .tile-expand{position:absolute;right:4px;top:4px;width:32px;height:32px;border:0;border-radius:50%;background:var(--paper);font-size:18px}
+@media (max-width:600px) and (pointer:coarse){:root{--gap:clamp(30px,5vh,48px)}}
 </style></head><body><main><form id="form"><fieldset id="fields"><label for="title">やったこと</label><input id="title" required maxlength="200" placeholder="部屋を掃除した" enterkeyhint="done"><div class="time"><input id="date" type="date" aria-label="記録する日"><div class="dial"><button class="step" type="button" id="minus" aria-label="5分前へ">−</button><div class="digits" id="clock" role="spinbutton" tabindex="0" aria-label="時刻、上下で5分ずつ変更"></div><button class="step" type="button" id="plus" aria-label="5分後へ">＋</button></div></div><div class="modes" role="radiogroup" aria-label="時計の意味"><label><input type="radio" name="mode" value="start"><span>始めた時間</span></label><label><input type="radio" name="mode" value="end" checked><span>終わった時間</span></label></div><div class="duration-row"><div class="durationhead"><span class="label" id="dl">所要時間</span></div><div class="reelbox"><div class="reel" id="reel" role="spinbutton" tabindex="0" aria-labelledby="dl" aria-valuemin="1" aria-valuemax="1440"></div></div></div><div class="record-row"><p id="range"></p><button class="save" id="save">記録する</button></div></fieldset></form><p id="status" role="status"></p></main><footer class="tools"><button type="button" class="round" id="quick-window" aria-label="小窓で記録" title="小窓で記録" hidden><img src="./icon-192.png" width="48" height="48" alt=""></button><a id="android-download" href="https://github.com/piyosuke1003/yattalog/releases/latest/download/Yattalog.apk" hidden>Android版を入手</a></footer>
 <script>
 const formRoot=document.querySelector('main');

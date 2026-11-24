@@ -8,7 +8,13 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
-import androidx.compose.foundation.text.BasicTextField
+import android.graphics.Color as AndroidColor
+import android.os.Build
+import android.text.InputFilter
+import android.text.InputType
+import android.view.inputmethod.EditorInfo
+import android.widget.EditText
+import androidx.core.widget.doAfterTextChanged
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -53,14 +59,39 @@ internal fun EntryForm(draft: FormDraft, compact: Boolean, fold: () -> Unit, clo
             Column(Modifier.widthIn(max = 400.dp).fillMaxWidth()) {
                 Label("やったこと")
                 Spacer(Modifier.height(8.dp))
-                BasicTextField(draft.title, { if (it.length <= 200) { draft.title = it; draft.message = "" } },
-                    Modifier.fillMaxWidth().semantics { contentDescription = "やったこと" },
-                    enabled = !draft.saving, singleLine = true, textStyle = TextStyle(color = ink, fontSize = 20.sp),
-                    decorationBox = { input -> Box { if (draft.title.isEmpty()) Label("部屋を掃除した", 20, Color.DarkGray); input() } })
+                AndroidView(factory = { ctx ->
+                    EditText(ctx).apply {
+                        setSingleLine(true)
+                        inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_CAP_SENTENCES
+                        imeOptions = EditorInfo.IME_ACTION_DONE
+                        background = null
+                        if (Build.VERSION.SDK_INT >= 26) defaultFocusHighlightEnabled = false
+                        setPadding(0, 0, 0, 0)
+                        setTextColor(AndroidColor.rgb(48, 45, 48))
+                        setHintTextColor(AndroidColor.rgb(122, 113, 117))
+                        textSize = 20f
+                        hint = "部屋を掃除した"
+                        contentDescription = "やったこと"
+                        filters = arrayOf(InputFilter.LengthFilter(200))
+                        doAfterTextChanged { value ->
+                            val text = value.toString()
+                            if (text != draft.title) {
+                                draft.title = text
+                                draft.message = ""
+                            }
+                        }
+                    }
+                }, update = { field ->
+                    field.isEnabled = !draft.saving
+                    if (field.text.toString() != draft.title) {
+                        field.setText(draft.title)
+                        field.setSelection(field.length())
+                    }
+                }, modifier = Modifier.fillMaxWidth().heightIn(min = 44.dp))
                 Spacer(Modifier.height(7.dp))
                 Spacer(Modifier.fillMaxWidth().height(1.dp).background(Color(0xffc9bfc4)))
             }
-            Spacer(Modifier.height(10.dp))
+            Spacer(Modifier.height(if (compact) 20.dp else 32.dp))
             Action(stamp(draft.anchor, "yyyy年M月d日(E)") + " ⌄", "日付を選ぶ", { pickingDate = !pickingDate })
             if (pickingDate) AndroidView(factory = { ctx ->
                 CalendarView(ctx).apply {
@@ -91,10 +122,12 @@ internal fun EntryForm(draft: FormDraft, compact: Boolean, fold: () -> Unit, clo
                 }) { Label(stamp(draft.anchor, "HH:mm"), if (compact) 36 else 46) }
                 Action("＋", "5分進める", { draft.step(1) })
             }
+            Spacer(Modifier.height(if (compact) 6.dp else 10.dp))
             Row {
                 Action("始めた時間", "始めた時間", { draft.startsHere = true }, draft.startsHere)
                 Action("終わった時間", "終わった時間", { draft.startsHere = false }, !draft.startsHere)
             }
+            Spacer(Modifier.height(if (compact) 14.dp else 24.dp))
             Row(Modifier.widthIn(max = 400.dp).fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically) {
                 Label("所要時間")
@@ -108,6 +141,7 @@ internal fun EntryForm(draft: FormDraft, compact: Boolean, fold: () -> Unit, clo
                     setOnValueChangedListener { _, _, index -> draft.minutes = durations[index] }
                 } }, update = { it.value = durations.indexOf(draft.minutes) }, modifier = Modifier.width(116.dp).height(106.dp))
             }
+            Spacer(Modifier.height(if (compact) 12.dp else 20.dp))
             Row(Modifier.widthIn(max = 400.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween) {
                 val pattern = if (stamp(draft.start, "yyyyMMdd") == stamp(draft.end, "yyyyMMdd")) "HH:mm" else "M/d HH:mm"

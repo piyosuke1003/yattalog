@@ -1,5 +1,8 @@
 using System;
-using System.Linq;
+using System.Net.Http;
+using System.Text.Json;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Interop;
@@ -28,7 +31,29 @@ class Smoke {
   var anchor=typeof(MainWindow).GetField("anchor",System.Reflection.BindingFlags.NonPublic|System.Reflection.BindingFlags.Instance);
   anchor.SetValue(w,new DateTime(2026,11,24,23,55,0));
   typeof(MainWindow).GetMethod("StepClock",System.Reflection.BindingFlags.NonPublic|System.Reflection.BindingFlags.Instance).Invoke(w,new object[]{1});
-  Check(Find<TextBlock>("Clock").Text=="00:00" && Find<DatePicker>("Day").SelectedDate.Value.Day==25,"clock carries day at midnight");
+  Check(Find<TextBlock>("Clock").Text=="00:00" && Find<TextBlock>("Day").Text.Contains("11/25"),"clock carries day at midnight");
+  typeof(MainWindow).GetMethod("StepDay",System.Reflection.BindingFlags.NonPublic|System.Reflection.BindingFlags.Instance).Invoke(w,new object[]{-1});
+  Check(Find<TextBlock>("Day").Text.Contains("11/24") && Find<TextBlock>("Clock").Text=="00:00","scroll date independently");
   w.Close();
+  // Run the async callback test without the WPF dispatcher.
+  Task.Run(CheckSaveReceipt).GetAwaiter().GetResult();
+ }
+ static async Task CheckSaveReceipt() {
+  var opened=new TaskCompletionSource<string>();
+  using var timeout=new CancellationTokenSource(TimeSpan.FromSeconds(15));
+  var now=DateTimeOffset.Now;
+  var save=CalendarHandoff.SaveAsync("読書 & #1",now,now.AddMinutes(15),timeout.Token,url=>opened.SetResult(url));
+  var page=new Uri(await opened.Task);
+  using var payload=JsonDocument.Parse(Uri.UnescapeDataString(page.Fragment.Substring(1)));
+  var e=payload.RootElement;
+  if(e.GetProperty("title").GetString()!="読書 & #1" || e.GetProperty("end").GetInt64()-e.GetProperty("start").GetInt64()!=900000)
+   throw new Exception("Entry was not preserved");
+  using var http=new HttpClient(new HttpClientHandler {UseProxy=false});
+  var origin="http://127.0.0.1:"+e.GetProperty("port").GetInt32()+"/";
+  var wrong=await http.GetAsync(origin+"wrong/saved");
+  if(wrong.IsSuccessStatusCode || save.IsCompleted) throw new Exception("Invalid receipt accepted");
+  await http.GetStringAsync(origin+e.GetProperty("nonce").GetString()+"/saved");
+  await save;
+  Console.WriteLine("desktop save payload and single-use loopback receipt");
  }
 }
