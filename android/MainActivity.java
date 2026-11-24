@@ -26,6 +26,10 @@ public class MainActivity extends Activity {
     }
     @Override public void onResume() {
         super.onResume();
+        if (OverlayService.collapseForLauncher()) {
+            moveTaskToBack(true);
+            return;
+        }
         OverlayService.exitToApp();
         form.attach(this, host, false);
         if (waitingOverlay) {

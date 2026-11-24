@@ -71,7 +71,10 @@ public class OverlayService extends Service {
         return new WindowManager.LayoutParams(w,h,type,flags,PixelFormat.TRANSLUCENT);
     }
     private void makeBubble() {
-        int side=dp(52);
+        android.util.DisplayMetrics metrics=windowContext.getResources().getDisplayMetrics();
+        int millimeterX=Math.round(metrics.xdpi/25.4f);
+        int millimeterY=Math.round(metrics.ydpi/25.4f);
+        int side=dp(52)+2*millimeterX;
         bubble=new ImageButton(windowContext);
         bubble.setImageResource(R.drawable.round_logo);
         bubble.setScaleType(ImageView.ScaleType.FIT_CENTER);
@@ -80,19 +83,33 @@ public class OverlayService extends Service {
         bubble.setBackground(bg); bubble.setClipToOutline(true); bubble.setElevation(dp(4));
         small=params(side,side,WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE);
         small.gravity=Gravity.TOP|Gravity.LEFT;
-        Point screen=area(); small.x=screen.x-side-dp(32); small.y=screen.y-side-dp(48);
+        Point screen=area();
+        // Keep the previous centre as the reference when the radius changes.
+        small.x=screen.x-dp(52)-dp(32);
+        small.y=screen.y-dp(52)-dp(48)-millimeterX-2*millimeterY;
         bubble.setOnClickListener(v -> showPanel());
+        if(Build.VERSION.SDK_INT>=26) bubble.setTooltipText("タップで入力パネル、長押しで通常画面");
+        bubble.setContentDescription("待機タイル。タップで入力パネル、長押しで通常画面");
+        bubble.setOnLongClickListener(v -> {
+            try {
+                startActivity(new Intent(this, MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK|Intent.FLAG_ACTIVITY_CLEAR_TOP|Intent.FLAG_ACTIVITY_SINGLE_TOP));
+            } catch (RuntimeException e) { Toast.makeText(this,"ホーム画面から「やったこと」を開いてください。",Toast.LENGTH_SHORT).show(); }
+            return true;
+        });
         bubble.setOnTouchListener(new View.OnTouchListener() {
-            float downX,downY; int x,y; boolean dragging;
+            float downX,downY; int x,y; boolean dragging,held;
+            final Runnable longPress=() -> { held=true; bubble.performLongClick(); };
             public boolean onTouch(View v,MotionEvent e) {
                 switch(e.getActionMasked()) {
                     case MotionEvent.ACTION_DOWN:
-                        downX=e.getRawX(); downY=e.getRawY(); x=small.x; y=small.y; dragging=false; return true;
+                        downX=e.getRawX(); downY=e.getRawY(); x=small.x; y=small.y; dragging=false; held=false; v.postDelayed(longPress,ViewConfiguration.getLongPressTimeout()); return true;
                     case MotionEvent.ACTION_MOVE:
                         int dx=Math.round(e.getRawX()-downX),dy=Math.round(e.getRawY()-downY);
                         if(!dragging && Math.hypot(dx,dy)<ViewConfiguration.get(v.getContext()).getScaledTouchSlop()) return true;
-                        dragging=true; small.x=x+dx; small.y=y+dy; boundBubble(); return true;
-                    case MotionEvent.ACTION_UP: if(!dragging) v.performClick(); return true;
+                        v.removeCallbacks(longPress); if(held) return true; dragging=true; small.x=x+dx; small.y=y+dy; boundBubble(); return true;
+                    case MotionEvent.ACTION_UP:
+                        v.removeCallbacks(longPress); if(!held && !dragging) v.performClick(); return true;
+                    case MotionEvent.ACTION_CANCEL: v.removeCallbacks(longPress); return true;
                     default: return true;
                 }
             }
@@ -122,6 +139,11 @@ public class OverlayService extends Service {
             form.attach(windowContext,panel,true);
             bubble.setVisibility(View.GONE);
         } catch(RuntimeException e) { stopSelf(); }
+    }
+    static boolean collapseForLauncher() {
+        if(active==null || active.panel==null) return false;
+        active.hidePanel();
+        return true;
     }
     static void foldPanel() { if(active!=null) active.hidePanel(); }
     private void hidePanel() {

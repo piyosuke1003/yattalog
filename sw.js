@@ -1,4 +1,4 @@
-const cacheName = 'yattalog-ui-4';
+const cacheName = 'yattalog-ui-5';
 const assets = ['./','./index.html','./calendar-v1.js','./quick-window.js','./manifest.webmanifest','./icon-192.png','./icon-512.png'];
 const paths = new Set(assets.map(path => new URL(path, self.registration.scope).pathname));
 self.addEventListener('install', e => e.waitUntil(caches.open(cacheName).then(cache => cache.addAll(assets)).then(()=>self.skipWaiting())));

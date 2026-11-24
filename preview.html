@@ -17,12 +17,17 @@ iframe{inset:0;width:100%;height:100%}.stage[data-state=mini] iframe{inset:auto 
 .bubble{right:32px;bottom:48px;width:52px;height:52px;border-radius:50%;padding:0;overflow:hidden;cursor:pointer;box-shadow:0 3px 10px #27342b33}.bubble img{width:100%;height:100%;display:block}
 [hidden]{display:none!important}.note{color:#665e60;font-size:13px;margin:8px 0}
 @media(max-width:780px){main{max-width:520px}.grid{grid-template-columns:1fr}.stage{height:610px}}
+#windows .bubble{width:151px;height:113px;border-radius:12px;background:#f0e7eb;display:grid;place-items:center}
+#windows .bubble img{width:44px;height:44px;border-radius:12px}
+.tile-full{position:absolute;z-index:2;right:36px;bottom:124px;width:32px;height:32px;border-radius:50%;border:0;background:#faf8f6;cursor:pointer}
+#android .bubble{width:64px;height:64px;right:20px;bottom:54px}
+nav button:disabled{opacity:.45}
 </style></head><body><main><header><h1>表示プレビュー</h1><p>右下のアイコンで切り替えられます。ここでの入力はカレンダーに保存されません。</p></header>
-<div class="grid"><section id="windows"><div class="top"><h2>Windows</h2><nav aria-label="Windowsの表示"><button data-mode="full">通常</button><button data-mode="mini">小窓</button></nav></div><div class="stage"><iframe sandbox="allow-scripts" title="Windowsの記録フォーム"></iframe></div><p class="note">小窓の背景は、元のウィンドウを手動で最小化した状態です。</p></section>
-<section id="android"><div class="top"><h2>Android</h2><nav aria-label="Androidの表示"><button data-mode="full">通常</button><button data-mode="bubble">丸のみ</button><button data-mode="mini">小窓</button></nav></div><div class="stage"><iframe sandbox="allow-scripts" title="Androidの記録フォーム"></iframe><button class="bubble" aria-label="記録窓を開く" hidden><img src="./icon-192.png" alt=""></button></div></section></div></main>
+<div class="grid"><section id="windows"><div class="top"><h2>Windows</h2><nav aria-label="Windowsの表示"><button data-mode="full">通常</button><button data-mode="bubble">待機タイル</button><button data-mode="mini">入力パネル</button></nav></div><div class="stage"><iframe sandbox="allow-scripts" title="Windowsの記録フォーム"></iframe><button class="bubble" aria-label="入力パネルを開く" hidden><img src="./icon-192.png" alt=""></button><button class="tile-full" aria-label="通常画面へ" hidden>⤢</button></div><p class="note">小窓の背景は、元のウィンドウを手動で最小化した状態です。</p></section>
+<section id="android"><div class="top"><h2>Android</h2><nav aria-label="Androidの表示"><button data-mode="full">通常</button><button data-mode="bubble">待機タイル</button><button data-mode="mini">入力パネル</button></nav></div><div class="stage"><iframe sandbox="allow-scripts" title="Androidの記録フォーム"></iframe><button class="bubble" aria-label="記録窓を開く" hidden><img src="./icon-192.png" alt=""></button></div></section></div></main>
 <script>
 (async () => {
-  const response = await fetch('./android/assets/index.html');
+  const response = await fetch('./android/assets/index.html?v=1.5');
   if (!response.ok) throw new Error('form');
   const original = await response.text();
   for (const section of document.querySelectorAll('section')) {
@@ -32,16 +37,25 @@ iframe{inset:0;width:100%;height:100%}.stage[data-state=mini] iframe{inset:auto 
     function show(next) {
       mode=next; stage.dataset.state=mode;
       frame.hidden = mode==='bubble'||mode==='off';
-      if(bubble) bubble.hidden=mode!=='bubble';
+      bubble.hidden=mode!=='bubble';
+      const expand=section.querySelector('.tile-full');
+      if(expand) { expand.hidden=mode!=='bubble'; expand.onclick=()=>show('full'); }
+      for(const button of section.querySelectorAll('nav button')) button.disabled=mode!=='off' && mode!=='bubble' && button.dataset.mode!==mode && button.dataset.mode!=='bubble';
       for(const button of section.querySelectorAll('nav button')) button.setAttribute('aria-pressed',String(button.dataset.mode===mode));
       frame.contentWindow.postMessage({mode},'*');
     }
     for(const button of section.querySelectorAll('nav button')) button.onclick=()=>show(button.dataset.mode);
-    if(bubble) bubble.onclick=()=>show('mini');
+    bubble.onclick=()=>{if(mode==='bubble') show('mini');};
+    if(android){
+      let timer;
+      bubble.onpointerdown=()=>{timer=setTimeout(()=>show('full'),550);};
+      bubble.onpointerup=bubble.onpointercancel=bubble.onpointerleave=()=>clearTimeout(timer);
+      bubble.oncontextmenu=e=>e.preventDefault();
+    }
     window.addEventListener('message',event=>{
       if(event.source!==frame.contentWindow) return;
       if(event.data==='ready') show(mode);
-      if(event.data==='toggle') show(android?'bubble':mode==='mini'?'full':'mini');
+      if(event.data==='toggle') show('bubble');
       if(event.data==='fold') show('bubble');
       if(event.data==='stop') show('off');
     });
@@ -58,7 +72,7 @@ iframe{inset:0;width:100%;height:100%}.stage[data-state=mini] iframe{inset:auto 
         if(!${android}){
           floatButton.hidden=false;
           document.querySelector('.mini-actions').hidden=true;
-          floatButton.title=compact?'通常のウィンドウに戻る':'小窓で記録';
+          floatButton.title='待機タイルにする';
           floatButton.setAttribute('aria-label',floatButton.title);
         }
       });
