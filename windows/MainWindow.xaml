@@ -1,5 +1,5 @@
 <Window x:Class="Yattalog.MainWindow" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
- Title="やったこと" Width="440" Height="650" WindowStartupLocation="CenterScreen" Background="#FAF8F6" Foreground="#302D30" FontFamily="Yu Gothic UI" FontSize="14">
+ Title="やったこと" Width="430" Height="590" WindowStartupLocation="CenterScreen" Background="#FAF8F6" Foreground="#302D30" FontFamily="Yu Gothic UI" FontSize="14">
  <Window.Resources>
   <Geometry x:Key="Logo">M3,5 L21,5 21,21 3,21 Z M3,9 H21 M7,2 V7 M17,2 V7 M7,14 L10,17 17,11</Geometry>
   <Style TargetType="Button">
@@ -15,19 +15,23 @@
   </ControlTemplate></Setter.Value></Setter></Style>
  </Window.Resources>
  <Grid>
-  <Grid x:Name="Form" Margin="20,12">
+  <Grid x:Name="Form" Margin="22,16">
    <Grid.RowDefinitions><RowDefinition/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalContentAlignment="Stretch">
-    <StackPanel MaxWidth="350" VerticalAlignment="Center" Margin="3,8">
+    <StackPanel x:Name="Fields" MaxWidth="346" VerticalAlignment="Center" Margin="2,6">
      <Label Target="{Binding ElementName=TitleBox}" Content="やったこと" Padding="0,0,0,4"/>
      <Border BorderBrush="#B5A9AF" BorderThickness="0,0,0,1"><TextBox x:Name="TitleBox" FontSize="19" MaxLength="200" Background="Transparent" BorderThickness="0" FocusVisualStyle="{x:Null}" Padding="0,4" AutomationProperties.Name="やったこと"/></Border>
-     <DatePicker x:Name="Day" Margin="0,18,0,2" HorizontalAlignment="Center" SelectedDateChanged="DayChanged" AutomationProperties.Name="日付"/>
+     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Background="Transparent" Margin="0,20,0,0" PreviewMouseWheel="DayWheel" ToolTip="スクロールで日付を変更">
+      <Button Content="‹" Click="PreviousDay" Width="32" AutomationProperties.Name="前の日"/>
+      <TextBlock x:Name="Day" MinWidth="120" TextAlignment="Center" VerticalAlignment="Center" Foreground="#665E63"/>
+      <Button Content="›" Click="NextDay" Width="32" AutomationProperties.Name="次の日"/>
+     </StackPanel>
      <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
       <Button Content="−" Click="Earlier" Width="40" AutomationProperties.Name="5分戻す"/>
       <TextBlock x:Name="Clock" FontFamily="Segoe UI" FontSize="44" VerticalAlignment="Center" MouseWheel="ClockWheel"/>
       <Button Content="＋" Click="Later" Width="40" AutomationProperties.Name="5分進める"/>
      </StackPanel>
-     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,4,0,12">
+     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,5,0,18">
       <RadioButton x:Name="Start" Content="始めた時間" Checked="AnchorChanged"/><RadioButton x:Name="End" Content="終わった時間" IsChecked="True" Checked="AnchorChanged"/>
      </StackPanel>
      <Grid><Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition/></Grid.ColumnDefinitions>
@@ -38,10 +42,16 @@
        <Button x:Name="After" Click="Longer" Height="26" AutomationProperties.Name="所要時間を長くする"/>
       </StackPanel>
      </Grid>
-     <TextBlock x:Name="Range" TextAlignment="Center" Margin="0,12,0,0" Foreground="#665E63"/>
+     <Grid Margin="0,18,0,0"><Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+      <TextBlock x:Name="Range" VerticalAlignment="Center" TextWrapping="Wrap" Foreground="#665E63"/>
+      <Button Grid.Column="1" x:Name="SaveButton" Padding="20,9" Background="#74465B" Foreground="White" Content="記録する" Click="Save"/>
+     </Grid>
     </StackPanel>
    </ScrollViewer>
-   <Button x:Name="FoldButton" Grid.Row="1" HorizontalAlignment="Right" Width="42" Height="42" Padding="10" Background="#74465B" Click="Fold" AutomationProperties.Name="待機タイルへ" ToolTip="待機タイルへ"><Path Data="{StaticResource Logo}" Stroke="White" StrokeThickness="2" Stretch="Uniform"/></Button>
+   <Grid Grid.Row="1" Margin="0,6,0,0"><Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+    <StackPanel VerticalAlignment="Center"><TextBlock x:Name="Status" VerticalAlignment="Center" TextWrapping="Wrap" FontSize="12" Foreground="#665E63" Margin="0,0,8,0" AutomationProperties.LiveSetting="Polite"/><Button x:Name="CancelWait" HorizontalAlignment="Left" Padding="0,2" Visibility="Collapsed" Content="確認をやめる" Click="StopWaiting"/></StackPanel>
+    <Button Grid.Column="1" x:Name="FoldButton" HorizontalAlignment="Right" Width="42" Height="42" Padding="10" Background="#74465B" Click="Fold" AutomationProperties.Name="待機タイルへ" ToolTip="待機タイルへ"><Path Data="{StaticResource Logo}" Stroke="White" StrokeThickness="2" Stretch="Uniform"/></Button>
+   </Grid>
   </Grid>
   <Grid x:Name="Tile" Visibility="Collapsed">
    <Button x:Name="OpenPanelButton" Click="OpenPanel" ToolTip="入力パネルを開く" AutomationProperties.Name="入力パネルを開く">
