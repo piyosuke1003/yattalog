@@ -70,8 +70,8 @@ internal class LogForm private constructor(context: Context) {
         if (compact) {
             val tree = FormOwner()
             owner = tree
-            next.setViewTreeLifecycleOwner(tree)
-            next.setViewTreeSavedStateRegistryOwner(tree)
+            host.setViewTreeLifecycleOwner(tree)
+            host.setViewTreeSavedStateRegistryOwner(tree)
         }
         next.setContent {
             EntryForm(draft, compact,
