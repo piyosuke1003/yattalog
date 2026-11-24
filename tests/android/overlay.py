@@ -24,6 +24,22 @@ def locate(value):
 def tap(value):
     adb("shell", "input", "tap", *locate(value))
 
+def standby_center():
+    # A non-focusable overlay leaves the underlying app as the active
+    # accessibility window. Read the actual overlay bounds from WindowManager.
+    for _ in range(20):
+        windows = adb("shell", "dumpsys", "window", "windows")
+        for block in re.split(r"(?m)^\s*Window #\d+ ", windows)[1:]:
+            if PACKAGE not in block.splitlines()[0] or "APPLICATION_OVERLAY" not in block:
+                continue
+            match = re.search(r"\b(?:frame|mFrame)=\[(-?\d+),(-?\d+)\]\[(-?\d+),(-?\d+)\]", block)
+            if match:
+                left, top, right, bottom = map(int, match.groups())
+                if right > left and bottom > top:
+                    return ((left + right) // 2, (top + bottom) // 2)
+        time.sleep(0.3)
+    raise AssertionError("No standby window in WindowManager: " + windows)
+
 apk, = Path("android/build/outputs/apk/debug").glob("*.apk")
 adb("install", "-r", "-g", apk)
 adb("shell", "appops", "set", PACKAGE, "SYSTEM_ALERT_WINDOW", "allow")
@@ -32,11 +48,10 @@ tap("android.widget.EditText")
 adb("shell", "input", "text", "draft")
 adb("shell", "input", "keyevent", "KEYCODE_BACK")
 tap("待機タイルへ")
-bubble = "待機タイル。タップで入力パネル、長押しで通常画面"
-tap(bubble)
+adb("shell", "input", "tap", *standby_center())
 locate("draft")
 tap("待機タイルへ")
-x, y = locate(bubble)
+x, y = standby_center()
 adb("shell", "input", "swipe", x, y, x, y, 900)
 locate("draft")
 locate("待機タイルへ")
