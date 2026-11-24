@@ -1,0 +1,31 @@
+plugins {
+    id 'com.android.application' version '8.13.1'
+    id 'org.jetbrains.kotlin.android' version '2.2.10'
+    id 'org.jetbrains.kotlin.plugin.compose' version '2.2.10'
+}
+android {
+    namespace 'jp.personal.yattalog'
+    compileSdk 36
+    defaultConfig {
+        applicationId 'jp.personal.yattalog'
+        minSdk 24
+        targetSdk 34
+    }
+    sourceSets.main {
+        manifest.srcFile 'AndroidManifest.xml'
+        res.srcDirs = ['res']
+    }
+    buildTypes { debug { applicationIdSuffix '.preview' } }
+    buildFeatures { compose true }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+kotlin { jvmToolchain(17) }
+dependencies {
+    implementation 'androidx.activity:activity-ktx:1.8.2'
+    implementation 'androidx.compose.foundation:foundation:1.10.4'
+    implementation 'androidx.lifecycle:lifecycle-runtime:2.10.0'
+    implementation 'androidx.savedstate:savedstate:1.4.0'
+}

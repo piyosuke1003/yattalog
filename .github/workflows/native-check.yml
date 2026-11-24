@@ -1,0 +1,50 @@
+name: Native previews
+on:
+  workflow_dispatch:
+  pull_request:
+    paths: ['windows/**', 'android/**', 'tests/**', '.github/workflows/native-check.yml']
+  push:
+    branches: [main]
+    paths: ['windows/**', 'android/src/**', 'android/*.gradle', 'android/AndroidManifest.xml']
+permissions:
+  contents: read
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - run: dotnet run --project tests/windows/Smoke.csproj
+      - run: dotnet publish windows/Yattalog.csproj -c Release -r win-x64 --self-contained true -o win-preview -p:DebugType=None
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Yattalog-Windows-preview
+          path: win-preview/
+  android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+      - run: ./gradlew assembleDebug
+        working-directory: android
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Yattalog-Android-preview
+          path: android/build/outputs/apk/debug/*.apk
+      - name: Enable emulator acceleration
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          arch: x86_64
+          disable-animations: true
+          script: python3 tests/android/overlay.py
