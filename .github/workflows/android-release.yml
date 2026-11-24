@@ -29,5 +29,5 @@ jobs:
               gh release upload "$tag" "$file"
             fi
           else
-            gh release create "$tag" "$file" --target "$GITHUB_SHA" --title "やったこと $version" --notes 'Android版をインストールして「丸いボタンを表示」を押すと、別のアプリを開いたまま記録できます。'
+            gh release create "$tag" "$file" --target "$GITHUB_SHA" --title "やったこと $version" --notes 'Android版をインストールして右下のカレンダーアイコンを押すと、別のアプリを開いたまま記録できます。'
           fi

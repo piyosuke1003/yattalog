@@ -18,7 +18,7 @@ public class OverlayService extends Service {
     private WindowManager wm;
     private Context windowContext;
     private FrameLayout panel;
-    private Button bubble;
+    private ImageButton bubble;
     private WindowManager.LayoutParams small;
     private LogForm form;
     private int type;
@@ -72,14 +72,15 @@ public class OverlayService extends Service {
     }
     private void makeBubble() {
         int side=dp(52);
-        bubble=new Button(windowContext);
-        bubble.setText("＋"); bubble.setTextSize(24); bubble.setTextColor(-1);
+        bubble=new ImageButton(windowContext);
+        bubble.setImageResource(R.drawable.round_logo);
+        bubble.setScaleType(ImageView.ScaleType.FIT_CENTER);
         bubble.setPadding(0,0,0,0); bubble.setContentDescription("やったことを記録");
         GradientDrawable bg=new GradientDrawable(); bg.setShape(GradientDrawable.OVAL); bg.setColor(0xff74465b);
-        bubble.setBackground(bg); bubble.setElevation(dp(4));
+        bubble.setBackground(bg); bubble.setClipToOutline(true); bubble.setElevation(dp(4));
         small=params(side,side,WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE);
         small.gravity=Gravity.TOP|Gravity.LEFT;
-        Point screen=area(); small.x=screen.x-side-dp(12); small.y=screen.y-side-dp(24);
+        Point screen=area(); small.x=screen.x-side-dp(32); small.y=screen.y-side-dp(48);
         bubble.setOnClickListener(v -> showPanel());
         bubble.setOnTouchListener(new View.OnTouchListener() {
             float downX,downY; int x,y; boolean dragging;
